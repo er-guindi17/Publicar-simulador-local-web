@@ -24,7 +24,7 @@ No hace falta configurar claves, cuentas ni variables de entorno para esta aplic
 
 ## Datos y límites
 
-- El PIN solo identifica visualmente el ensayo; no se envía a ningún servicio.
+- El PIN solo identifica visualmente el ensayo y no se reenvía a servicios externos.
 - Se generan entre 1 y 100 participantes ficticios por ensayo.
 - Se permiten hasta 5 ensayos activos y se conservan hasta 20 ensayos recientes.
 - El historial vive en la memoria del proceso del servidor y se pierde cuando se reinicia.

@@ -244,7 +244,7 @@ function Home() {
                   {createMutation.isPending ? <><LoaderCircle className="spin" size={17} /> Iniciando ensayo…</> : <><Play size={16} fill="currentColor" /> Iniciar ensayo <ArrowRight size={16} /></>}
                 </button>
               </form>
-              <div className="privacy-note"><ShieldCheck size={16} /><span>Solo se generan participantes ficticios. El PIN no se envía a ningún servicio.</span></div>
+              <div className="privacy-note"><ShieldCheck size={16} /><span>Solo se generan participantes ficticios. El PIN no se reenvía a servicios externos.</span></div>
             </aside>
 
             <section className="monitor-card panel-card">
