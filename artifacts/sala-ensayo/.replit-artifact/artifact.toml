@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Sala de ensayo"
+description = "Simulador web local para practicar la creación de participantes y el seguimiento de eventos en una sala, sin conexión con Kahoot ni servicios externos."
+version = "1.0.0"
+id = "artifacts/sala-ensayo"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20485
+
+[services.development]
+run = "pnpm --filter @workspace/sala-ensayo run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/sala-ensayo", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/sala-ensayo/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20485"
+BASE_PATH = "/"

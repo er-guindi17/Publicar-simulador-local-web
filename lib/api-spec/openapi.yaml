@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: simulations
+    description: Local-only practice simulations
 paths:
   /healthz:
     get:
@@ -24,6 +26,112 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /simulations:
+    get:
+      operationId: listSimulations
+      tags: [simulations]
+      summary: List recent simulations
+      responses:
+        "200":
+          description: Recent simulations, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SimulationSummary"
+    post:
+      operationId: createSimulation
+      tags: [simulations]
+      summary: Start a local-only simulation
+      description: Creates simulated participants in server memory. Does not contact Kahoot or external services.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SimulationInput"
+      responses:
+        "201":
+          description: Simulation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Simulation"
+        "400":
+          description: Invalid simulation input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Too many concurrent or stored simulations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /simulations/summary:
+    get:
+      operationId: getSimulationSummary
+      tags: [simulations]
+      summary: Get local simulation totals
+      responses:
+        "200":
+          description: Summary of simulations held in this server process
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimulationOverview"
+  /simulations/{simulationId}:
+    parameters:
+      - name: simulationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getSimulation
+      tags: [simulations]
+      summary: Get a simulation and its events
+      responses:
+        "200":
+          description: Current simulation state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Simulation"
+        "404":
+          description: Simulation not found in this server process
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /simulations/{simulationId}/stop:
+    parameters:
+      - name: simulationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: stopSimulation
+      tags: [simulations]
+      summary: Stop a running local simulation
+      responses:
+        "200":
+          description: Stopped or already finished simulation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Simulation"
+        "404":
+          description: Simulation not found in this server process
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +141,165 @@ components:
           type: string
       required:
         - status
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    SimulationInput:
+      type: object
+      properties:
+        pin:
+          type: string
+          pattern: "^[0-9]{4,10}$"
+        count:
+          type: integer
+          minimum: 1
+          maximum: 100
+        baseName:
+          type: string
+          minLength: 1
+          maxLength: 24
+      required:
+        - pin
+        - count
+        - baseName
+    SimulationStatus:
+      type: string
+      enum:
+        - running
+        - completed
+        - stopped
+    SimulationParticipant:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        status:
+          type: string
+          enum:
+            - simulated
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - status
+        - createdAt
+    SimulationEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        message:
+          type: string
+        kind:
+          type: string
+          enum:
+            - system
+            - info
+            - success
+        at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - message
+        - kind
+        - at
+    Simulation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pin:
+          type: string
+        baseName:
+          type: string
+        count:
+          type: integer
+        joined:
+          type: integer
+        status:
+          $ref: "#/components/schemas/SimulationStatus"
+        startedAt:
+          type: string
+          format: date-time
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/SimulationParticipant"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/SimulationEvent"
+      required:
+        - id
+        - pin
+        - baseName
+        - count
+        - joined
+        - status
+        - startedAt
+        - participants
+        - events
+    SimulationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pin:
+          type: string
+        baseName:
+          type: string
+        count:
+          type: integer
+        joined:
+          type: integer
+        status:
+          $ref: "#/components/schemas/SimulationStatus"
+        startedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - pin
+        - baseName
+        - count
+        - joined
+        - status
+        - startedAt
+    SimulationOverview:
+      type: object
+      properties:
+        activeSessions:
+          type: integer
+        totalSessions:
+          type: integer
+        completedSessions:
+          type: integer
+        stoppedSessions:
+          type: integer
+        participantsGenerated:
+          type: integer
+        recent:
+          type: array
+          items:
+            $ref: "#/components/schemas/SimulationSummary"
+      required:
+        - activeSessions
+        - totalSessions
+        - completedSessions
+        - stoppedSessions
+        - participantsGenerated
+        - recent
 
